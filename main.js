@@ -239,3 +239,17 @@ function movimentosRei(coluna, linha) {
   }
 }
 
+
+
+function ChangeGIF(){
+  const body = document.body;
+
+  const wallpaper = ["gif.gif","gif2.gif","gif3.gif"]
+
+  const index = Math.floor(Math.random()*wallpaper.length)
+  console.log(index);
+
+  body.style.backgroundImage = `url(${wallpaper[index]})`
+  
+}
+setInterval(ChangeGIF,31000)
