@@ -1,29 +1,21 @@
-// Quadrados válidos para movimento
 let quadradosLegais = [];
-// Variável de turno
 let turnobranco = true;
-const tabuleiro = document.querySelectorAll(".quadrado");
-// Seleciona todas as peças com classe peça
-const pecas = document.querySelectorAll(".peça");
-// Seleciona todas as imagens dentro das peças
-const pecasImagens = document.querySelectorAll("img");
+let pecaSelecionada = null; // Variável para armazenar a peça clicada
 
-// Configura o tabuleiro e as peças ao carregar o script
+const tabuleiro = document.querySelectorAll(".quadrado");
+const pecas = document.querySelectorAll(".peça");
+
 setupTabuleiro();
 setupPecas();
 
-// Função para configurar tabuleiro
+// Configurar tabuleiro
 function setupTabuleiro() {
   let i = 0;
   for (let quadrado of tabuleiro) {
-    quadrado.addEventListener("dragover", (e) => {
-      e.preventDefault(); 
-    });
-    quadrado.addEventListener("drop", drop);
-    
     let row = 8 - Math.floor(i / 8);
     let column = String.fromCharCode(97 + (i % 8));
-    quadrado.id = column + row; // Define o ID do quadrado
+    quadrado.id = column + row;
+    quadrado.addEventListener("click", moverPeca); // Adiciona evento de clique nos quadrados
     i++;
   }
 }
@@ -31,49 +23,64 @@ function setupTabuleiro() {
 // Configurar peças
 function setupPecas() {
   for (let peca of pecas) {
-    peca.addEventListener("dragstart", drag);
-    if (peca) {
-      peca.setAttribute("draggable", true);
-      peca.id = peca.classList[1] + peca.parentElement.id;
+    peca.addEventListener("click", selecionarPeca);
+    peca.id = peca.classList[1] + peca.parentElement.id;
+  }
+}
+
+function selecionarPeca(e) {
+  const peca = e.currentTarget;
+  const pecaCor = peca.getAttribute("color");
+
+  if ((turnobranco && pecaCor === "branco") || (!turnobranco && pecaCor === "preto")) {
+    if (pecaSelecionada === peca) {
+      pecaSelecionada = null;
+      limparDestaques();
+    } else {
+      pecaSelecionada = peca;
+      getPossiveisMov(peca.parentNode.id, peca);
+      destacarQuadrados(); // Adiciona destaque nos quadrados válidos
     }
   }
-
-  for (let pecaImagem of pecasImagens) {
-    pecaImagem.setAttribute("draggable", false);
-  }
 }
 
-// Função chamada ao arrastar uma peça
-function drag(e) {
-  const peca = e.target;
-  const pecaCor = peca.getAttribute("color") || ""; 
-  if ((turnobranco && pecaCor === "branco") || (!turnobranco && pecaCor === "preto")) {
-    e.dataTransfer.setData("text", peca.id);
-    const quadradoInicialId = peca.parentNode.id;
-    getPossiveisMov(quadradoInicialId, peca);
-  }
-}
+function moverPeca(e) {
+  if (!pecaSelecionada) return;
 
-// Função chamada ao dropar uma peça
-function drop(e) {
-  e.preventDefault();
-  let data = e.dataTransfer.getData("text");
-  const peca = document.getElementById(data);
   const destinoQuadrado = e.currentTarget;
   const pecaNoDestino = destinoQuadrado.querySelector(".peça");
-  
+
   if (quadradosLegais.includes(destinoQuadrado.id)) {
     if (!pecaNoDestino) {
-      destinoQuadrado.appendChild(peca);
-      turnobranco = !turnobranco;
-    } else if (pecaNoDestino.getAttribute("color") !== peca.getAttribute("color")) {
+      destinoQuadrado.appendChild(pecaSelecionada);
+    } else if (pecaNoDestino.getAttribute("color") !== pecaSelecionada.getAttribute("color")) {
       pecaNoDestino.remove();
-      destinoQuadrado.appendChild(peca);
-      turnobranco = !turnobranco;
+      destinoQuadrado.appendChild(pecaSelecionada);
+    }
+    
+    turnobranco = !turnobranco;
+    pecaSelecionada = null;
+    limparDestaques(); // Remove os destaques após mover
+  }
+}
+
+// Função para destacar os quadrados legais
+function destacarQuadrados() {
+  limparDestaques(); // Limpa marcações anteriores
+  for (let id of quadradosLegais) {
+    let quadrado = document.getElementById(id);
+    if (quadrado) {
+      quadrado.classList.add("destaque"); // Adiciona a classe CSS
     }
   }
 }
 
+// Função para limpar os destaques quando a peça é deselecionada ou movida
+function limparDestaques() {
+  for (let quadrado of tabuleiro) {
+    quadrado.classList.remove("destaque"); 
+  }
+}
 // Função para obter movimentos válidos
 function getPossiveisMov(posicao, peca) {
   quadradosLegais = [];
@@ -239,17 +246,3 @@ function movimentosRei(coluna, linha) {
   }
 }
 
-
-
-function ChangeGIF(){
-  const body = document.body;
-
-  const wallpaper = ["gif.gif","gif2.gif","gif3.gif"]
-
-  const index = Math.floor(Math.random()*wallpaper.length)
-  console.log(index);
-
-  body.style.backgroundImage = `url(${wallpaper[index]})`
-  
-}
-setInterval(ChangeGIF,31000)
